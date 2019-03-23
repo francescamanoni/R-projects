@@ -1,0 +1,80 @@
+---
+title: "Check Test"
+author: "Francesca Manoni"
+date: "19 dicembre 2018"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Cluster Analysis
+
+
+```{r, echo=TRUE}
+library(ggplot2)
+library(gridExtra)
+data(iris)
+head(iris)
+#set seed for replicability
+set.seed(8768)
+#remove species to have only the numeric variables
+iris_numeric<-iris
+iris_numeric$Species<-NULL
+head(iris_numeric)
+#store the species in another variable
+iris.class<- iris[,"Species"]
+
+#normalize
+
+normalize <- function(x){
+  return ((x-min(x))/(max(x)-min(x)))
+}
+
+iris_numeric$Sepal.Length<- normalize(iris_numeric$Sepal.Length)
+iris_numeric$Sepal.Width<- normalize(iris_numeric$Sepal.Width)
+iris_numeric$Petal.Length<- normalize(iris_numeric$Petal.Length)
+iris_numeric$Petal.Width<- normalize(iris_numeric$Petal.Width)
+head(iris_numeric)
+
+#clustering with K-means (k=3)
+cluster<-kmeans(iris_numeric,3)
+#look at the size of the clusters
+cluster$size
+#look at the centers of the clusters
+cluster$centers
+#look at cluster vector to see the custer where each record falls
+cluster$cluster
+
+#create a new variable with the cluster membership
+iris$cluster_m<-cluster$cluster
+
+#create a contingency table - evaluation
+table(iris$cluster_m,iris.class)
+
+#Result of contingency table shows that Cluster 1 corresponds
+#to Versicolor, Cluster 2 corresponds to Setosa and Cluster 3 to Virginica
+
+```
+
+## Plotting
+
+
+```{r pressure, echo=TRUE}
+
+#setting the margins and the layout of the plots
+par(mfrow=c(1,2), mar=c(5,4,2,2))
+
+#plotting
+p1 <- ggplot(iris, aes(Petal.Length, Petal.Width, colour = factor(cluster_m))) +
+  geom_point() + ggtitle("Petal width and length - cluster")
+
+p2 <- ggplot(iris, aes(Petal.Length, Petal.Width, colour = factor(Species))) +
+  geom_point() + ggtitle("Petal width and length - Species")
+
+grid.arrange(p1, p2, nrow=1)
+
+```
+
+
